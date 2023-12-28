@@ -1,6 +1,6 @@
 use bevy::{prelude::*, input::mouse::{MouseMotion, MouseWheel}};
 
-use crate::{postprocess::PostProcessSettings, player::Player};
+use crate::{player::Player, postprocess::PostProcessSettings};
 
 pub struct CameraPlugin;
 
@@ -29,7 +29,7 @@ fn setup_camera(mut commands: Commands){
     commands.spawn((
         Camera3dBundle {
             projection: PerspectiveProjection {
-                fov: 60.0_f32.to_radians(),
+                fov: 50.0_f32.to_radians(),
                 ..Default::default()
             }.into(),
             transform: Transform::from_xyz(-2.5, 4.5, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
@@ -41,19 +41,19 @@ fn setup_camera(mut commands: Commands){
         },
         CameraController {
             rotate_lock: 88.0 * 0.0174533,
-            sensitivity: (0.173) / 100.0,
+            sensitivity: (0.173) / 500.0,
             rotation: Vec3::new(0.0, 0.0, 0.0),
             focus: Vec3::ZERO,
-            distance: 7.5,
+            distance: 100.0
         }
     ));
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
-            intensity: 2000.0,
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            illuminance: 5000.0,
             shadows_enabled: true,
             ..Default::default()
         },
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
+        transform: Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, 20.0, 10.0, 20.0)),
         ..Default::default()
     });
 }
@@ -65,7 +65,7 @@ fn camera_zoom(
     let Ok(mut camera_controller) = camera_query.get_single_mut() else { return };
 
     for ev in ev_scroll.read() {
-        camera_controller.distance -= ev.y / 6.0;
+        camera_controller.distance -= ev.y;
     }
 }
 
@@ -75,8 +75,8 @@ fn camera_orbit(
 ){
     for (mut transform, controller) in camera_query.iter_mut(){
         for ev in ev_motion.read() {
-            let delta_x = ev.delta.x / 1000.0 * std::f32::consts::PI * 2.0;
-            let delta_y = ev.delta.y / 1000.0 * std::f32::consts::PI;
+            let delta_x = ev.delta.x * std::f32::consts::PI * 2.0 * controller.sensitivity;
+            let delta_y = ev.delta.y * std::f32::consts::PI * controller.sensitivity;
 
             let yaw = Quat::from_rotation_y(-delta_x);
             let pitch = Quat::from_rotation_x(-delta_y);

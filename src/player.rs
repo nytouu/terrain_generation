@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_rapier3d::prelude::*;
 
 pub struct PlayerPlugin;
 
@@ -19,34 +20,44 @@ struct Speed {
 
 fn setup_player(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>
+    // mut meshes: ResMut<Assets<Mesh>>,
+    // mut materials: ResMut<Assets<StandardMaterial>>
 ){
-    let player = (PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube::new(1.0))),
-            material: materials.add(Color::RED.into()),
-            transform: Transform::from_xyz(0.0, 0.5, 0.0),
-            ..Default::default()
-        }, 
+    let player = 
+        // (PbrBundle {
+        //     mesh: meshes.add(Mesh::from(shape::Cube::new(1.0))),
+        //     material: materials.add(Color::RED.into()),
+        //     transform: Transform::from_xyz(0.0, 0.5, 0.0),
+        //     ..Default::default()
+        // }, 
+        (
         Player,
-        Speed { value: 10.0 }
+        Speed { value: 50.0 },
+        RigidBody::KinematicPositionBased
     );
 
-    commands.spawn(player);
+
+    commands.spawn(player)
+        .insert(KinematicCharacterController {
+            custom_mass: Some(10.0),
+            ..Default::default()
+        })
+        .insert(Collider::cuboid(0.5, 0.5 , 0.5))
+        .insert(Name::new("Player"))
+        .insert(TransformBundle::from(Transform::from_xyz(0.0, 10.0, 0.0)));
 }
 
 fn player_movement(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
-    mut player_query: Query<(&mut Transform, &Speed), With<Player>>,
+    mut player_query: Query<(&mut Transform, &mut KinematicCharacterController, &Speed), With<Player>>,
     camera_query: Query<&Transform, (With<Camera3d>, Without<Player>)>
 ){
-    for (mut player_transform, player_speed) in player_query.iter_mut(){
+    for (mut player_transform, mut player_controller, player_speed) in player_query.iter_mut(){
         let camera: &Transform = match camera_query.get_single() {
             Ok(c) => c,
             Err(e) => Err(format!("Error retrieving camera : {}", e)).unwrap(),
         };
-
         let mut direction = Vec3::ZERO;
 
         if keys.pressed(KeyCode::Z){
@@ -62,8 +73,11 @@ fn player_movement(
             direction += camera.right()
         }
 
-        direction.y = 0.0;
-        let movement = direction.normalize_or_zero() * player_speed.value * time.delta_seconds();
-        player_transform.translation += movement;
+        direction.y = -5.0;
+        println!("{}", direction);
+
+        direction = direction.normalize_or_zero();
+        let movement = direction * player_speed.value * time.delta_seconds();
+        player_controller.translation = Some(movement);
     }
 }
