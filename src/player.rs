@@ -11,11 +11,18 @@ impl Plugin for PlayerPlugin {
 }
 
 #[derive(Component)]
-pub struct Player;
+pub struct Player {
+    speed: f32,
+    lerp_factor: f32,
+}
 
-#[derive(Component)]
-struct Speed {
-    value: f32,
+impl Default for Player {
+    fn default() -> Self {
+        Player {
+            speed: 150.0,
+            lerp_factor: 0.95
+        }
+    }
 }
 
 fn setup_player(
@@ -31,11 +38,13 @@ fn setup_player(
         //     ..Default::default()
         // }, 
         (
-        Player,
-        Speed { value: 50.0 },
         RigidBody::KinematicPositionBased
     );
 
+        Player {
+            speed: 50.0,
+            ..Default::default()
+        },
 
     commands.spawn(player)
         .insert(KinematicCharacterController {
@@ -77,7 +86,7 @@ fn player_movement(
         println!("{}", direction);
 
         direction = direction.normalize_or_zero();
-        let movement = direction * player_speed.value * time.delta_seconds();
+        let movement = direction * player.speed * time.delta_seconds();
         player_controller.translation = Some(movement);
     }
 }
