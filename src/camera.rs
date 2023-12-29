@@ -1,4 +1,4 @@
-use bevy::{prelude::*, input::mouse::{MouseMotion, MouseWheel}};
+use bevy::{prelude::*, input::mouse::{MouseMotion, MouseWheel}, pbr::CascadeShadowConfigBuilder};
 
 use crate::{player::Player, postprocess::PostProcessSettings};
 
@@ -53,6 +53,12 @@ fn setup_camera(mut commands: Commands){
             shadows_enabled: true,
             ..Default::default()
         },
+        cascade_shadow_config: CascadeShadowConfigBuilder {
+            first_cascade_far_bound: 200.0,
+            maximum_distance: 400.0,
+            ..default()
+        }
+        .into(),
         transform: Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, 20.0, 10.0, 20.0)),
         ..Default::default()
     });
