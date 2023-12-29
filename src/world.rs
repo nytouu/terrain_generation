@@ -15,7 +15,7 @@ fn setup_world(
     mut materials: ResMut<Assets<StandardMaterial>>
 ){
     let plane = PbrBundle {
-        mesh: meshes.add(shape::Plane::from_size(1000.0).into()),
+        mesh: meshes.add(shape::Plane::from_size(20.0).into()),
         material: materials.add(Color::CYAN.into()),
         ..Default::default()
     };
@@ -28,7 +28,7 @@ fn setup_world(
 
     commands.spawn(plane)
         .insert(RigidBody::Fixed)
-        .insert(Collider::cuboid(500.0, 0.02, 500.0));
+        .insert(Collider::cuboid(10.0, 0.02, 10.0));
     commands.spawn(ball)
         .insert(RigidBody::Dynamic)
         .insert(Collider::ball(1.0))
