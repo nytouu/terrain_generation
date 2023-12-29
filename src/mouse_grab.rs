@@ -11,10 +11,11 @@ impl Plugin for MouseGrabPlugin {
 fn grab_mouse(
     mut windows: Query<&mut Window>,
     key: Res<Input<KeyCode>>,
+    mouse: Res<Input<MouseButton>>,
 ) {
     let mut window = windows.single_mut();
 
-    if key.just_pressed(KeyCode::ShiftRight) {
+    if mouse.just_pressed(MouseButton::Left) {
         window.cursor.visible = false;
         window.cursor.grab_mode = CursorGrabMode::Locked;
     }
