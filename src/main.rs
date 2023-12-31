@@ -1,18 +1,20 @@
-use bevy::{prelude::*, window::WindowResolution};
+use bevy::{prelude::*, window::WindowResolution, pbr::wireframe::WireframePlugin};
 use bevy_rapier3d::prelude::*;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 pub mod world;
 pub mod camera;
 pub mod player;
 pub mod postprocess;
-pub mod ui;
+// pub mod ui;
 pub mod mouse_grab;
+pub mod mesh;
 
 use world::WorldPlugin;
 use camera::CameraPlugin;
 use player::PlayerPlugin;
 use postprocess::PostProcessPlugin;
-use ui::FpsCounter;
+// use ui::FpsCounter;
 use mouse_grab::MouseGrabPlugin;
 
 fn main() {
@@ -27,14 +29,16 @@ fn main() {
                 }),
                 ..Default::default()
             }),
+            // WireframePlugin,
             RapierPhysicsPlugin::<NoUserData>::default(),
-            RapierDebugRenderPlugin::default(),
+            // RapierDebugRenderPlugin::default(),
             MouseGrabPlugin,
             PlayerPlugin,
             WorldPlugin,
             CameraPlugin,
             PostProcessPlugin,
-            FpsCounter,
+            WorldInspectorPlugin::new(),
+            // FpsCounter,
         ))
         .run();
 }

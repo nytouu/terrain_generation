@@ -90,11 +90,12 @@ fn camera_zoom(
                 controller.distance = controller.min_distance;
             }
 
+            transform.rotation.x =
+                f32::clamp(transform.rotation.x, -controller.rotate_lock, controller.rotate_lock);
+
             let matrix = Mat3::from_quat(transform.rotation);
             transform.translation =
                 controller.focus + matrix.mul_vec3(Vec3::new(0.0, 0.0, controller.distance));
-            transform.rotation.x =
-                f32::clamp(transform.rotation.x, -controller.rotate_lock, controller.rotate_lock);
         }
     }
 }

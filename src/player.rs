@@ -5,8 +5,9 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App){
-        app.add_systems(Startup, setup_player)
-           .add_systems(Update, player_movement);
+        app.add_systems(Startup, (setup_player, setup_player_state))
+            .add_systems(PreUpdate, check_grounded)
+            .add_systems(Update, keyboard_movement);
     }
 }
 
@@ -14,15 +15,30 @@ impl Plugin for PlayerPlugin {
 pub struct Player {
     speed: f32,
     lerp_factor: f32,
+    // air_friction: f32,
+    // deadzone: f32,
 }
 
 impl Default for Player {
     fn default() -> Self {
         Player {
-            speed: 150.0,
-            lerp_factor: 0.95
+            speed: 10.0,
+            lerp_factor: 0.95,
+            // air_friction: 0.2,
+            // deadzone: 0.20
         }
     }
+}
+
+#[derive(Resource)]
+pub struct PlayerState {
+    grounded: bool
+}
+
+fn setup_player_state(mut commands: Commands){
+    commands.insert_resource(PlayerState {
+        grounded: false
+    })
 }
 
 fn setup_player(
@@ -30,15 +46,19 @@ fn setup_player(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>
 ){
-    let player = 
+    let player =
         (PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube::new(1.0))),
+            mesh: meshes.add(Mesh::from(shape::Capsule{
+                radius: 0.5,
+                depth: 1.0,
+                ..Default::default()
+            })),
             material: materials.add(Color::RED.into()),
-            transform: Transform::from_xyz(0.0, 100.0, 0.0),
+            transform: Transform::from_xyz(0.0, 10.0, 0.0),
             ..Default::default()
         }, 
         Player {
-            speed: 50.0,
+            speed: 20.0,
             ..Default::default()
         },
 
@@ -48,15 +68,16 @@ fn setup_player(
             custom_mass: Some(10.0),
             ..Default::default()
         },
-        Collider::cuboid(0.5, 0.5 , 0.5),
+        Collider::capsule_y(0.5, 0.5),
     );
 
     commands.spawn(player);
 }
 
-fn player_movement(
+fn keyboard_movement(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
+    state: Res<PlayerState>,
     mut player_query: Query<(&mut Transform, &mut KinematicCharacterController, &Player)>,
     camera_query: Query<&Transform, (With<Camera3d>, Without<Player>)>,
 ){
@@ -65,8 +86,8 @@ fn player_movement(
             Ok(c) => c,
             Err(e) => Err(format!("Error retrieving camera : {}", e)).unwrap(),
         };
-        let old = player_transform.rotation;
-        let mut direction = old.clone().to_scaled_axis();
+        let old_direction = player_transform.rotation;
+        let mut direction = old_direction.clone().to_scaled_axis();
         let mut any = false;
 
         // handle keyboard
@@ -88,7 +109,7 @@ fn player_movement(
         }
 
         // gravity
-        direction.y = -5.0;
+        direction.y = -0.981;
 
         // apply direction
         direction = direction.normalize_or_zero();
@@ -98,7 +119,21 @@ fn player_movement(
         // lerp rotate player towards direction
         if any {
             player_transform.rotation =
-                Quat::from_rotation_y(direction.x.atan2(direction.z)).lerp(old, player.lerp_factor);
+                Quat::from_rotation_y(direction.x.atan2(direction.z)).lerp(old_direction, player.lerp_factor);
+        }
+    }
+}
+
+fn check_grounded(
+    controllers: Query<(Entity, &KinematicCharacterControllerOutput)>,
+    mut state: ResMut<PlayerState>,
+) {
+    for (_entity, output) in controllers.iter() {
+        // info!("{:?}", output.grounded);
+
+        match output.grounded {
+            true => state.grounded = true,
+            false => state.grounded = false
         }
     }
 }

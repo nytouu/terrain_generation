@@ -7,11 +7,11 @@ pub struct FpsCounter;
 
 impl Plugin for FpsCounter {
     fn build(&self, app: &mut App){
-        app.add_systems(Startup, setup_fps_counter);
-        app.add_systems(Update, (
-            fps_text_update_system,
-            fps_counter_showhide,
-        ));
+        app.add_systems(Startup, setup_fps_counter)
+            .add_systems(Update, (
+                fps_text_update_system,
+                fps_counter_showhide,
+            ));
     }
 }
 
