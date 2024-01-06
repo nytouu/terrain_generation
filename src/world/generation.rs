@@ -1,25 +1,23 @@
 use bevy::prelude::*;
 use bevy::render::render_resource::PrimitiveTopology;
-use noise::utils::{NoiseMapBuilder, PlaneMapBuilder};
-use noise::{Fbm, Seedable};
 
-use std::default::Default;
+use super::noise::generate_noise_map;
 
 // create_mesh function taken from : https://gitlab.lejondahl.com/bevy/bevy_holo
-
-pub fn create_mesh<T> (seed: u32) -> Mesh where T: Default + noise::NoiseFn<f64, 2>, T: Seedable {
-    let extent: f64 = 3.0;
-    let intensity = 0.3;
-    let width: usize = 32;
-    let depth: usize = 32;
+pub fn create_mesh(
+    // seed: u32,
+    size: f64,
+    intensity: f32,
+    width: usize,
+    depth: usize
+) -> Mesh {
+    let extent: f64 = size;
+    let intensity = intensity;
+    let width: usize = width;
+    let depth: usize = depth;
 
     // Create noisemap
-    let fbm = Fbm::<T>::new(seed);
-    let noisemap = PlaneMapBuilder::<_, 2>::new(&fbm)
-        .set_size(width, depth)
-        .set_x_bounds(-extent, extent)
-        .set_y_bounds(-extent, extent)
-        .build();
+    let noisemap = generate_noise_map(extent, width, depth);
 
     let vertices_count: usize = (width + 1) * (depth + 1);
     let triangle_count: usize = width * depth * 2 * 3;
@@ -73,3 +71,4 @@ pub fn create_mesh<T> (seed: u32) -> Mesh where T: Default + noise::NoiseFn<f64,
 
     mesh
 }
+

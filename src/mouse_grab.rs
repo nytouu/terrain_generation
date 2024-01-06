@@ -15,7 +15,7 @@ fn grab_mouse(
 ) {
     let mut window = windows.single_mut();
 
-    if mouse.just_pressed(MouseButton::Left) {
+    if mouse.just_pressed(MouseButton::Middle) {
         window.cursor.visible = false;
         window.cursor.grab_mode = CursorGrabMode::Locked;
     }
