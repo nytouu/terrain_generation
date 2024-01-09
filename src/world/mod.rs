@@ -1,18 +1,25 @@
-use bevy::{prelude::*, pbr::wireframe::Wireframe};
+use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-// use bevy_procedural_grass::prelude::*;
 
 pub mod noise;
 pub mod generation;
+pub mod chunk;
 
-use self::generation::create_mesh;
+use self::chunk::{setup_chunks, handle_chunks, ChunkData, Chunk};
 
 pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App){
-        app.add_systems(Startup, setup_world);
-    }
+        app.insert_resource(ChunkData{
+            chunklist: Vec::<Chunk>::new()
+        })
+            .add_systems(Startup, (
+                setup_world,
+                setup_chunks
+            ))
+            .add_systems(Update, handle_chunks);
+}
 }
 
 fn setup_world(
@@ -20,44 +27,11 @@ fn setup_world(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>
 ){
-    // let mut rng = rand::thread_rng();
-
-    // let mesh = create_mesh(0.3, 0.2, 64, 64);
-    let mesh = create_mesh(1.0, 0.2, 256, 256);
-    // let mesh = create_mesh::<Perlin>(50.0, 0.4, 32, 32);
-    let _plane = commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(mesh.clone()),
-            // mesh: meshes.add(shape::Plane::from_size(20.0).into()),
-            material: materials.add(Color::CYAN.into()),
-            transform: Transform {
-                scale: Vec3::new(512.0, 512.0, 512.0),
-                ..default()
-            },
-            ..default()
-        },
-        RigidBody::Fixed,
-        Collider::from_bevy_mesh(&mesh, &ComputedColliderShape::TriMesh).unwrap(),
-        Wireframe,
-        // Collider::cuboid(1.0, 0.02, 1.0)
-    )).id();
-
-    // spawn grass
-    // commands.spawn(GrassBundle {
-    //     mesh: meshes.add(GrassMesh::mesh(7)), // how many segments you want in the mesh (no. of verts = segments * 2 + 1)
-    //     grass: Grass {
-    //         entity: Some(plane.clone()), // set entity that grass will generate on top of.
-    //         ..default()
-    //     },
-    //     lod: GrassLODMesh::new(meshes.add(GrassMesh::mesh(3))), // optional: enables LOD
-    //     ..default()
-    // });
-
-    let ball = (PbrBundle {
+    commands.spawn((PbrBundle {
             mesh: meshes.add(shape::UVSphere::default().into()),
-            material: materials.add(Color::GREEN.into()),
+            material: materials.add(Color::BLUE.into()),
             transform: Transform {
-                translation: Vec3 { x: 3.0, y: 10.0, z: 2.0 },
+                translation: Vec3 { x: 0.0, y: 10.0, z: 0.0 },
                 ..default()
             },
             ..default()
@@ -65,7 +39,5 @@ fn setup_world(
         RigidBody::Dynamic,
         Restitution::new(0.5),
         Collider::ball(1.0),
-    );
-
-    commands.spawn(ball);
+    ));
 }

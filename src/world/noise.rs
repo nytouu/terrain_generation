@@ -1,11 +1,12 @@
 extern crate noise;
 
+use bevy::math::Vec2;
 use noise::utils::{NoiseMapBuilder, PlaneMapBuilder, NoiseMap};
 use noise::{core::worley::ReturnType, *};
 
 // example from : https://github.com/Razaekel/noise-rs/blob/develop/examples/complexplanet.rs
 #[allow(non_snake_case)]
-pub fn generate_noise_map(extent: f64, width: usize, depth: usize) -> NoiseMap {
+pub fn generate_noise_map(extent: f64, width: usize, depth: usize, chunk_location: Vec2) -> NoiseMap {
     /// Planet seed. Change this to generate a different planet.
     const CURRENT_SEED: u32 = 1;
 
@@ -1628,7 +1629,7 @@ pub fn generate_noise_map(extent: f64, width: usize, depth: usize) -> NoiseMap {
 
     PlaneMapBuilder::new(&unscaledFinalPlanet)
         .set_size(width, depth)
-        .set_x_bounds(-extent, extent)
-        .set_y_bounds(-extent, extent)
+        .set_x_bounds(-extent + (chunk_location.x as f64 * extent), extent + (chunk_location.x as f64 * extent))
+        .set_y_bounds(-extent + (chunk_location.y as f64 * extent), extent + (chunk_location.y as f64 * extent))
         .build()
 }

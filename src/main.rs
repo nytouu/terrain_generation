@@ -1,6 +1,5 @@
 use bevy::{prelude::*, window::WindowResolution, pbr::wireframe::WireframePlugin};
 use bevy_atmosphere::plugin::AtmospherePlugin;
-use bevy_procedural_grass::ProceduralGrassPlugin;
 use bevy_rapier3d::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
@@ -40,17 +39,17 @@ fn main() {
             WireframePlugin,
             MouseGrabPlugin,
             // PlayerPlugin, // from flycam
+            CameraPlugin,
             WorldPlugin,
             NoCameraPlayerPlugin,
-            CameraPlugin,
             PostProcessPlugin,
             WorldInspectorPlugin::new(),
             FrameTimeDiagnosticsPlugin::default(),
             FpsCounter,
         ))
         .insert_resource(MovementSettings {
-            sensitivity: 0.00015, // default: 0.00012
-            speed: 50.0, // default: 12.0
+            sensitivity: 0.00010, // default: 0.00012
+            speed: 25.0, // default: 12.0
         })
         .insert_resource(KeyBindings {
             move_forward: KeyCode::Z,

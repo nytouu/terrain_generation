@@ -9,7 +9,8 @@ pub fn create_mesh(
     size: f64,
     intensity: f32,
     width: usize,
-    depth: usize
+    depth: usize,
+    chunk: Vec2,
 ) -> Mesh {
     let extent: f64 = size;
     let intensity = intensity;
@@ -17,7 +18,7 @@ pub fn create_mesh(
     let depth: usize = depth;
 
     // Create noisemap
-    let noisemap = generate_noise_map(extent, width, depth);
+    let noisemap = generate_noise_map(extent, width, depth, chunk);
 
     let vertices_count: usize = (width + 1) * (depth + 1);
     let triangle_count: usize = width * depth * 2 * 3;
@@ -27,7 +28,7 @@ pub fn create_mesh(
     let (width_f32, depth_f32) = (width as f32, depth as f32);
     let extent_f32 = extent as f32;
 
-    // Defining vertices.
+    // Defining vertices
     let mut positions: Vec<[f32; 3]> = Vec::with_capacity(vertices_count);
     let mut normals: Vec<[f32; 3]> = Vec::with_capacity(vertices_count);
     let mut uvs: Vec<[f32; 2]> = Vec::with_capacity(vertices_count);
@@ -47,7 +48,7 @@ pub fn create_mesh(
         }
     }
 
-    // Defining triangles.
+    // Defining triangles
     let mut triangles: Vec<u32> = Vec::with_capacity(triangle_count);
 
     for d in 0..depth_u32 {
@@ -71,4 +72,3 @@ pub fn create_mesh(
 
     mesh
 }
-
