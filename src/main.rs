@@ -49,7 +49,7 @@ fn main() {
         ))
         .insert_resource(MovementSettings {
             sensitivity: 0.00010, // default: 0.00012
-            speed: 25.0, // default: 12.0
+            speed: 100.0, // default: 12.0
         })
         .insert_resource(KeyBindings {
             move_forward: KeyCode::Z,

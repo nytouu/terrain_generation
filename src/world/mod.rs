@@ -5,22 +5,23 @@ pub mod noise;
 pub mod generation;
 pub mod chunk;
 
-use self::chunk::{setup_chunks, handle_chunks, ChunkData, Chunk, ChunkEvent, spawn_chunk_task};
+use self::chunk::{setup_chunks, handle_chunks_event, ChunkData, Chunk, ChunkEvent, spawn_chunk_task, handle_chunk_tasks};
 
 pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App){
-        app.insert_resource(ChunkData{
-            chunklist: Vec::<Chunk>::new()
-        })
+        app.insert_resource(ChunkData(Vec::<Chunk>::new()))
             .add_systems(Startup, (
                 setup_world,
                 setup_chunks
             ));
         app.add_event::<ChunkEvent>();
-        app.add_systems(Update, handle_chunks)
-            .add_systems(PostUpdate, spawn_chunk_task);
+        app.add_systems(Update, (
+            handle_chunks_event,
+            spawn_chunk_task,
+            handle_chunk_tasks
+        ));
     }
 }
 
