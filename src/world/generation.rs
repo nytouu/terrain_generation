@@ -51,8 +51,8 @@ pub fn create_mesh(
     // Defining triangles
     let mut triangles: Vec<u32> = Vec::with_capacity(triangle_count);
 
-    for d in 0..depth_u32 {
-        for w in 0..width_u32 {
+    for d in 0..depth_u32 - 1 {
+        for w in 0..width_u32 - 1 {
             // First tringle
             triangles.push((d * (width_u32 + 1)) + w);
             triangles.push(((d + 1) * (width_u32 + 1)) + w);
