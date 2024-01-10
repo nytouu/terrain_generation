@@ -5,7 +5,7 @@ pub mod noise;
 pub mod generation;
 pub mod chunk;
 
-use self::chunk::{setup_chunks, handle_chunks, ChunkData, Chunk};
+use self::chunk::{setup_chunks, handle_chunks, ChunkData, Chunk, ChunkEvent, spawn_chunk_task};
 
 pub struct WorldPlugin;
 
@@ -17,9 +17,11 @@ impl Plugin for WorldPlugin {
             .add_systems(Startup, (
                 setup_world,
                 setup_chunks
-            ))
-            .add_systems(Update, handle_chunks);
-}
+            ));
+        app.add_event::<ChunkEvent>();
+        app.add_systems(Update, handle_chunks)
+            .add_systems(PostUpdate, spawn_chunk_task);
+    }
 }
 
 fn setup_world(
