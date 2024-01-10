@@ -14,8 +14,6 @@ impl Plugin for PlayerPlugin {
 pub struct Player {
     speed: f32,
     lerp_factor: f32,
-    // air_friction: f32,
-    // deadzone: f32,
 }
 
 impl Default for Player {
@@ -23,8 +21,6 @@ impl Default for Player {
         Player {
             speed: 10.0,
             lerp_factor: 0.95,
-            // air_friction: 0.2,
-            // deadzone: 0.20
         }
     }
 }
@@ -52,9 +48,7 @@ fn setup_player(
 
         // physics
         RigidBody::KinematicVelocityBased,
-        // RigidBody::Dynamic,
         LockedAxes::ROTATION_LOCKED,
-        // Ccd::enabled(),
         GravityScale(10.5),
         Velocity {
             linvel: Vec3::new(0.0, 0.0, 0.0),

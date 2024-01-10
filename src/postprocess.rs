@@ -1,6 +1,5 @@
 use bevy::{
     core_pipeline::{
-        // clear_color::ClearColorConfig,
         core_3d,
         fullscreen_vertex_shader::fullscreen_shader_vertex_state,
     },

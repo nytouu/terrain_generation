@@ -7,14 +7,12 @@ use bevy_flycam::prelude::*;
 
 pub mod world;
 pub mod camera;
-// pub mod player;
 pub mod postprocess;
 pub mod ui;
 pub mod mouse_grab;
 
 use world::WorldPlugin;
 use camera::CameraPlugin;
-// use player::PlayerPlugin;
 use postprocess::PostProcessPlugin;
 use ui::FpsCounter;
 use mouse_grab::MouseGrabPlugin;
@@ -34,11 +32,8 @@ fn main() {
             }),
             AtmospherePlugin,
             RapierPhysicsPlugin::<NoUserData>::default(),
-            // RapierDebugRenderPlugin::default(),
-            // ProceduralGrassPlugin::default(),
             WireframePlugin,
             MouseGrabPlugin,
-            // PlayerPlugin, // from flycam
             CameraPlugin,
             WorldPlugin,
             NoCameraPlayerPlugin,
