@@ -20,7 +20,7 @@ impl Plugin for WorldPlugin {
             handle_chunks_event,
             spawn_chunk_task,
             handle_chunk_tasks,
-            // remove_chunks
+            remove_chunks
         ).chain());
     }
 }

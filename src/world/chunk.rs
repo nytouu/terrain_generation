@@ -175,9 +175,9 @@ pub fn remove_chunks(
                 if neighbor == &chunk.coords || current_chunk == chunk.coords {
                     should_remove = false;
                 }
-                if should_remove {
-                    commands.entity(entity).despawn();
-                }
+            }
+            if should_remove {
+                commands.entity(entity).despawn();
             }
         }
     }
