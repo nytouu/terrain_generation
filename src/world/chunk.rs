@@ -28,7 +28,10 @@ pub struct Chunk {
 }
 
 #[derive(Component)]
-pub struct ChunkTask(Task<Chunk>);
+pub struct ChunkTask {
+    pub task: Task<Chunk>,
+    pub coords: Vec2
+}
 
 impl Chunk {
     fn new(coords: Vec2, lod: usize) -> Chunk {
@@ -57,6 +60,7 @@ pub fn setup_chunks(
 
 pub fn handle_chunks_event(
     chunks: Query<&Chunk>,
+    tasks: Query<&ChunkTask>,
     player_query: Query<&Transform, With<FlyCam>>,
     mut ev_chunk: EventWriter<ChunkEvent>,
 ){
@@ -68,22 +72,31 @@ pub fn handle_chunks_event(
         );
         let neighbors = get_neighbors(current_chunk);
 
-        for neighbor in neighbors {
-            let mut should_generate = true;
-            for chunk in chunks.iter() {
-                if chunk.coords == neighbor {
-                    should_generate = false;
+        let mut already_tasked = false;
+        for task in tasks.iter() {
+            for neighbor in &neighbors {
+                if task.coords == *neighbor {
+                    already_tasked = true;
                 }
             }
-            if should_generate {
+        }
+
+        for neighbor in neighbors {
+            let mut already_generated = false;
+
+            for chunk in chunks.iter() {
+                if chunk.coords == neighbor {
+                    already_generated = true;
+                }
+            }
+            if !already_generated && !already_tasked {
                 ev_chunk.send(ChunkEvent(ChunkBuilder{
                     lod: 16,
                     coords: Vec2::new(neighbor.x, neighbor.y)
                 }));
-                info!("chunk event sent for {:?}", neighbor);
+                // info!("chunk event sent for {:?}", neighbor);
             }
         }
-
     }
 }
 
@@ -102,7 +115,10 @@ pub fn spawn_chunk_task(
             Chunk::new(Vec2::new(x, y), 32)
         });
 
-        commands.spawn(ChunkTask(task));
+        commands.spawn(ChunkTask{
+            task,
+            coords: Vec2::new(x, y),
+        });
     }
 }
 
@@ -115,7 +131,7 @@ pub fn handle_chunk_tasks(
     let mut rng = rand::thread_rng();
 
     for (entity, mut task) in &mut chunk_tasks {
-        if let Some(new_chunk) = block_on(future::poll_once(&mut task.0)) {
+        if let Some(new_chunk) = block_on(future::poll_once(&mut task.task)) {
             let x = new_chunk.coords.x;
             let y = new_chunk.coords.y;
 
@@ -134,6 +150,7 @@ pub fn handle_chunk_tasks(
                 RigidBody::Fixed,
                 Collider::from_bevy_mesh(&new_chunk.mesh, &ComputedColliderShape::TriMesh).unwrap(),
                 Wireframe,
+                new_chunk,
             ));
 
             // Task is complete, so remove task component from entity
@@ -144,29 +161,23 @@ pub fn handle_chunk_tasks(
 
 pub fn remove_chunks(
     mut commands: Commands,
-    chunks: Query<(Entity, &mut Chunk)>,
+    chunks: Query<(Entity, &Chunk)>,
     player_query: Query<&Transform, With<FlyCam>>,
 ){
     if let Ok(player_transform) = player_query.get_single() {
-        let translation = player_transform.translation;
-        let current_chunk = Vec2::new(
-            (translation.x / CHUNK_WORLD_SIZE).round(),
-            (translation.z / CHUNK_WORLD_SIZE).round()
-        );
+        let current_chunk = get_player_chunk(player_transform.translation);
         let neighbors = get_neighbors(current_chunk);
 
         for (entity, chunk) in chunks.iter() {
             let mut should_remove = true;
 
-            for neighbor in neighbors.iter() {
-                if neighbor == &chunk.coords {
+            for neighbor in &neighbors {
+                if neighbor == &chunk.coords || current_chunk == chunk.coords {
                     should_remove = false;
                 }
-            }
-
-            if should_remove {
-                commands.entity(entity).despawn();
-                info!("Despawned chunk {:?}", chunk.coords);
+                if should_remove {
+                    commands.entity(entity).despawn();
+                }
             }
         }
     }
@@ -183,4 +194,11 @@ fn get_neighbors(coords: Vec2) -> Vec<Vec2> {
         Vec2::new(coords.x + 1.0, coords.y - 1.0),
         Vec2::new(coords.x - 1.0, coords.y + 1.0),
     ]
+}
+
+fn get_player_chunk(player_translation: Vec3) -> Vec2 {
+    Vec2::new(
+        (player_translation.x / CHUNK_WORLD_SIZE).round(),
+        (player_translation.z / CHUNK_WORLD_SIZE).round()
+    )
 }
