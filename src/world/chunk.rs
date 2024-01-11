@@ -65,36 +65,31 @@ pub fn handle_chunks_event(
     mut ev_chunk: EventWriter<ChunkEvent>,
 ){
     if let Ok(player_transform) = player_query.get_single() {
-        let translation = player_transform.translation;
-        let current_chunk = Vec2::new(
-            (translation.x / CHUNK_WORLD_SIZE).round(),
-            (translation.z / CHUNK_WORLD_SIZE).round()
-        );
+        let current_chunk = get_player_chunk(player_transform.translation);;
         let neighbors = get_neighbors(current_chunk);
 
-        let mut already_tasked = false;
-        for task in tasks.iter() {
-            for neighbor in &neighbors {
-                if task.coords == *neighbor {
-                    already_tasked = true;
+        for neighbor in &neighbors {
+            let mut already_tasked = false;
+            for task in tasks.iter() {
+                for neighbor in &neighbors {
+                    if task.coords == *neighbor {
+                        already_tasked = true;
+                    }
                 }
             }
-        }
 
-        for neighbor in neighbors {
             let mut already_generated = false;
-
             for chunk in chunks.iter() {
-                if chunk.coords == neighbor {
+                if chunk.coords == *neighbor {
                     already_generated = true;
                 }
             }
+
             if !already_generated && !already_tasked {
                 ev_chunk.send(ChunkEvent(ChunkBuilder{
                     lod: 16,
                     coords: Vec2::new(neighbor.x, neighbor.y)
                 }));
-                // info!("chunk event sent for {:?}", neighbor);
             }
         }
     }

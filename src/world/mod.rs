@@ -5,7 +5,7 @@ pub mod noise;
 pub mod generation;
 pub mod chunk;
 
-use self::chunk::{ChunkEvent, setup_chunks, handle_chunks_event, spawn_chunk_task, handle_chunk_tasks, remove_chunks};
+use self::chunk::*;
 
 pub struct WorldPlugin;
 
