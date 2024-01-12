@@ -13,9 +13,9 @@ const CHUNK_WORLD_SCALE: f32 = 512.0;
 const CHUNK_WORLD_SIZE: f32 = 128.0;
 
 #[derive(Event)]
-pub struct ChunkEvent(ChunkBuilder);
+pub struct ChunkEvent(ChunkDescriptor);
 
-pub struct ChunkBuilder {
+pub struct ChunkDescriptor {
     pub lod: usize,
     pub coords: Vec2
 }
@@ -30,7 +30,7 @@ pub struct Chunk {
 #[derive(Component)]
 pub struct ChunkTask {
     pub task: Task<Chunk>,
-    pub coords: Vec2
+    pub descriptor: ChunkDescriptor
 }
 
 impl Chunk {
@@ -52,7 +52,7 @@ impl Debug for Chunk {
 pub fn setup_chunks(
     mut ev_chunk: EventWriter<ChunkEvent>,
 ){
-    ev_chunk.send(ChunkEvent(ChunkBuilder{
+    ev_chunk.send(ChunkEvent(ChunkDescriptor{
         lod: 16,
         coords: Vec2::new(0.0, 0.0)
     }));
@@ -65,14 +65,14 @@ pub fn handle_chunks_event(
     mut ev_chunk: EventWriter<ChunkEvent>,
 ){
     if let Ok(player_transform) = player_query.get_single() {
-        let current_chunk = get_player_chunk(player_transform.translation);;
+        let current_chunk = get_player_chunk(player_transform.translation);
         let neighbors = get_neighbors(current_chunk);
 
-        for neighbor in &neighbors {
+        for (neighbor, lod) in &neighbors {
             let mut already_tasked = false;
             for task in tasks.iter() {
-                for neighbor in &neighbors {
-                    if task.coords == *neighbor {
+                for (neighbor, _) in &neighbors {
+                    if task.descriptor.coords == *neighbor {
                         already_tasked = true;
                     }
                 }
@@ -86,8 +86,8 @@ pub fn handle_chunks_event(
             }
 
             if !already_generated && !already_tasked {
-                ev_chunk.send(ChunkEvent(ChunkBuilder{
-                    lod: 16,
+                ev_chunk.send(ChunkEvent(ChunkDescriptor{
+                    lod: *lod,
                     coords: Vec2::new(neighbor.x, neighbor.y)
                 }));
             }
@@ -105,14 +105,18 @@ pub fn spawn_chunk_task(
         let builder = &ev.0;
         let x = builder.coords.x;
         let y = builder.coords.y;
+        let lod = builder.lod;
 
         let task = thread_pool.spawn(async move {
-            Chunk::new(Vec2::new(x, y), 32)
+            Chunk::new(Vec2::new(x, y), lod)
         });
 
         commands.spawn(ChunkTask{
             task,
-            coords: Vec2::new(x, y),
+            descriptor: ChunkDescriptor {
+                lod: builder.lod,
+                coords: Vec2::new(x, y) 
+            }
         });
     }
 }
@@ -166,8 +170,9 @@ pub fn remove_chunks(
         for (entity, chunk) in chunks.iter() {
             let mut should_remove = true;
 
-            for neighbor in &neighbors {
+            for (neighbor, _) in &neighbors {
                 if neighbor == &chunk.coords || current_chunk == chunk.coords {
+                    // TODO: check for lod correctness
                     should_remove = false;
                 }
             }
@@ -178,17 +183,37 @@ pub fn remove_chunks(
     }
 }
 
-fn get_neighbors(coords: Vec2) -> Vec<Vec2> {
-    vec![
-        Vec2::new(coords.x, coords.y + 1.0),
-        Vec2::new(coords.x + 1.0, coords.y + 1.0),
-        Vec2::new(coords.x + 1.0, coords.y),
-        Vec2::new(coords.x, coords.y - 1.0),
-        Vec2::new(coords.x - 1.0, coords.y - 1.0),
-        Vec2::new(coords.x - 1.0, coords.y),
-        Vec2::new(coords.x + 1.0, coords.y - 1.0),
-        Vec2::new(coords.x - 1.0, coords.y + 1.0),
-    ]
+fn get_neighbors(coords: Vec2) -> Vec<(Vec2, usize)> {
+    [
+        (Vec2::new(coords.x, coords.y + 1.0), 16),
+        (Vec2::new(coords.x + 1.0, coords.y + 1.0), 16),
+        (Vec2::new(coords.x + 1.0, coords.y), 16),
+        (Vec2::new(coords.x, coords.y - 1.0), 16),
+        (Vec2::new(coords.x - 1.0, coords.y - 1.0), 16),
+        (Vec2::new(coords.x - 1.0, coords.y), 16),
+        (Vec2::new(coords.x + 1.0, coords.y - 1.0), 16),
+        (Vec2::new(coords.x - 1.0, coords.y + 1.0), 16),
+
+
+        (Vec2::new(coords.x, coords.y + 2.0), 8),
+        (Vec2::new(coords.x, coords.y - 2.0), 8),
+        (Vec2::new(coords.x + 2.0, coords.y), 8),
+        (Vec2::new(coords.x - 2.0, coords.y), 8),
+
+        (Vec2::new(coords.x + 2.0, coords.y + 2.0), 8),
+        (Vec2::new(coords.x + 1.0, coords.y + 2.0), 8),
+        (Vec2::new(coords.x + 2.0, coords.y + 1.0), 8),
+        (Vec2::new(coords.x + 2.0, coords.y - 2.0), 8),
+        (Vec2::new(coords.x + 1.0, coords.y - 2.0), 8),
+        (Vec2::new(coords.x + 2.0, coords.y - 1.0), 8),
+
+        (Vec2::new(coords.x - 2.0, coords.y + 2.0), 8),
+        (Vec2::new(coords.x - 1.0, coords.y + 2.0), 8),
+        (Vec2::new(coords.x - 2.0, coords.y + 1.0), 8),
+        (Vec2::new(coords.x - 2.0, coords.y - 2.0), 8),
+        (Vec2::new(coords.x - 1.0, coords.y - 2.0), 8),
+        (Vec2::new(coords.x - 2.0, coords.y - 1.0), 8)
+    ].to_vec()
 }
 
 fn get_player_chunk(player_translation: Vec3) -> Vec2 {
