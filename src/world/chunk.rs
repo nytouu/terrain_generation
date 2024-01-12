@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use bevy::{prelude::*, pbr::wireframe::Wireframe};
 use bevy_flycam::FlyCam;
 use bevy_rapier3d::{dynamics::RigidBody, geometry::{Collider, ComputedColliderShape}};
@@ -11,6 +9,9 @@ use super::generation::create_mesh;
 
 const CHUNK_WORLD_SCALE: f32 = 512.0;
 const CHUNK_WORLD_SIZE: f32 = 128.0;
+
+const FAR_LOD: usize = 8;
+const NORMAL_LOD: usize = 16;
 
 #[derive(Event)]
 pub struct ChunkEvent(ChunkDescriptor);
@@ -43,17 +44,11 @@ impl Chunk {
     }
 }
 
-impl Debug for Chunk {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, ":Chunk({}):", self.coords)
-    }
-}
-
 pub fn setup_chunks(
     mut ev_chunk: EventWriter<ChunkEvent>,
 ){
     ev_chunk.send(ChunkEvent(ChunkDescriptor{
-        lod: 16,
+        lod: NORMAL_LOD,
         coords: Vec2::new(0.0, 0.0)
     }));
 }
@@ -66,7 +61,7 @@ pub fn handle_chunks_event(
 ){
     if let Ok(player_transform) = player_query.get_single() {
         let current_chunk = get_player_chunk(player_transform.translation);
-        let neighbors = get_neighbors(current_chunk);
+        let neighbors = get_neighbors(current_chunk, 5);
 
         for (neighbor, lod) in &neighbors {
             let mut already_tasked = false;
@@ -165,7 +160,7 @@ pub fn remove_chunks(
 ){
     if let Ok(player_transform) = player_query.get_single() {
         let current_chunk = get_player_chunk(player_transform.translation);
-        let neighbors = get_neighbors(current_chunk);
+        let neighbors = get_neighbors(current_chunk, 5);
 
         for (entity, chunk) in chunks.iter() {
             let mut should_remove = true;
@@ -185,37 +180,24 @@ pub fn remove_chunks(
     }
 }
 
-fn get_neighbors(coords: Vec2) -> Vec<(Vec2, usize)> {
-    [
-        (Vec2::new(coords.x, coords.y + 1.0), 16),
-        (Vec2::new(coords.x + 1.0, coords.y + 1.0), 16),
-        (Vec2::new(coords.x + 1.0, coords.y), 16),
-        (Vec2::new(coords.x, coords.y - 1.0), 16),
-        (Vec2::new(coords.x - 1.0, coords.y - 1.0), 16),
-        (Vec2::new(coords.x - 1.0, coords.y), 16),
-        (Vec2::new(coords.x + 1.0, coords.y - 1.0), 16),
-        (Vec2::new(coords.x - 1.0, coords.y + 1.0), 16),
+fn get_neighbors(coords: Vec2, mut radius: i32) -> Vec<(Vec2, usize)> {
+    let mut neighbors = Vec::<(Vec2, usize)>::new();
+    if radius <= 0 { radius = 1 };
 
+    // let diameter = radius * 2 + 1;
+    let start = -radius;
+    let end = radius + 1;
 
-        (Vec2::new(coords.x, coords.y + 2.0), 8),
-        (Vec2::new(coords.x, coords.y - 2.0), 8),
-        (Vec2::new(coords.x + 2.0, coords.y), 8),
-        (Vec2::new(coords.x - 2.0, coords.y), 8),
+    for x in start..end {
+        for y in start..end {
+            // current chunk isn't a neighbor
+            if x != 0 || y != 0 {
+                neighbors.push((Vec2::new(coords.x + x as f32, coords.y + y as f32), NORMAL_LOD));
+            }
+        }
+    }
 
-        (Vec2::new(coords.x + 2.0, coords.y + 2.0), 8),
-        (Vec2::new(coords.x + 1.0, coords.y + 2.0), 8),
-        (Vec2::new(coords.x + 2.0, coords.y + 1.0), 8),
-        (Vec2::new(coords.x + 2.0, coords.y - 2.0), 8),
-        (Vec2::new(coords.x + 1.0, coords.y - 2.0), 8),
-        (Vec2::new(coords.x + 2.0, coords.y - 1.0), 8),
-
-        (Vec2::new(coords.x - 2.0, coords.y + 2.0), 8),
-        (Vec2::new(coords.x - 1.0, coords.y + 2.0), 8),
-        (Vec2::new(coords.x - 2.0, coords.y + 1.0), 8),
-        (Vec2::new(coords.x - 2.0, coords.y - 2.0), 8),
-        (Vec2::new(coords.x - 1.0, coords.y - 2.0), 8),
-        (Vec2::new(coords.x - 2.0, coords.y - 1.0), 8)
-    ].to_vec()
+    neighbors
 }
 
 fn get_player_chunk(player_translation: Vec3) -> Vec2 {
