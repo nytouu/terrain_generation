@@ -51,6 +51,15 @@ fn setup_camera(mut commands: Commands){
             ..default()
         },
         AtmosphereCamera::default(),
+        FogSettings {
+            color: Color::rgba(0.35, 0.48, 0.66, 1.0),
+            directional_light_color: Color::rgba(1.0, 0.95, 0.85, 0.5),
+            directional_light_exponent: 300.0,
+            falloff: FogFalloff::Linear {
+                start: 128.0,
+                end: 1024.0,
+            },
+        },
         FlyCam
     ));
     commands.spawn(DirectionalLightBundle {
