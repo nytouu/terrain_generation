@@ -170,9 +170,11 @@ pub fn remove_chunks(
         for (entity, chunk) in chunks.iter() {
             let mut should_remove = true;
 
-            for (neighbor, _) in &neighbors {
-                if neighbor == &chunk.coords || current_chunk == chunk.coords {
-                    // TODO: check for lod correctness
+            for (neighbor, lod) in &neighbors {
+                if neighbor == &chunk.coords && lod == &chunk.lod {
+                    should_remove = false;
+                }
+                if current_chunk == chunk.coords {
                     should_remove = false;
                 }
             }
