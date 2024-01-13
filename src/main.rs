@@ -23,7 +23,7 @@ fn main() {
         .add_plugins((
             DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {
-                    title: "Bevy game".to_string(),
+                    title: "Terrain Generation".to_string(),
                     resolution: WindowResolution::new(1280.0, 720.0),
                     resizable: false,
                     ..default()
