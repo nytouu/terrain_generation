@@ -8,7 +8,7 @@ use futures_lite::future;
 use super::generation::create_mesh;
 
 const CHUNK_WORLD_SCALE: f32 = 512.0;
-const CHUNK_WORLD_SIZE: f32 = 128.0;
+const CHUNK_WORLD_SIZE: f32 = 112.0;
 
 const FAR_LOD: usize = 8;
 const NORMAL_LOD: usize = 16;

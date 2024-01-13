@@ -17,6 +17,11 @@ pub fn create_mesh(
     let width: usize = width;
     let depth: usize = depth;
 
+    let mut offset = 0;
+    if depth == 16 {
+        offset = 1;
+    }
+
     // Create noisemap
     let noisemap = generate_noise_map(extent, width, depth, chunk);
 
@@ -51,8 +56,8 @@ pub fn create_mesh(
     // Defining triangles
     let mut triangles: Vec<u32> = Vec::with_capacity(triangle_count);
 
-    for d in 0..depth_u32 - 1 {
-        for w in 0..width_u32 - 1 {
+    for d in 0..depth_u32 - 1 - offset {
+        for w in 0..width_u32 - 1 - offset {
             // First tringle
             triangles.push((d * (width_u32 + 1)) + w);
             triangles.push(((d + 1) * (width_u32 + 1)) + w);

@@ -1630,12 +1630,12 @@ pub fn generate_noise_map(extent: f64, width: usize, depth: usize, chunk_locatio
     PlaneMapBuilder::new(&unscaledFinalPlanet)
         .set_size(width, depth)
         .set_x_bounds(
-            -extent + (chunk_location.x as f64 * extent * 2.0),
-            extent + (chunk_location.x as f64 * extent * 2.0)
+            -extent + (chunk_location.x as f64 * extent * 1.75),
+            extent + (chunk_location.x as f64 * extent * 1.75)
         )
         .set_y_bounds(
-            -extent + (chunk_location.y as f64 * extent * 2.0),
-            extent + (chunk_location.y as f64 * extent * 2.0)
+            -extent + (chunk_location.y as f64 * extent * 1.75),
+            extent + (chunk_location.y as f64 * extent * 1.75)
         )
         .build()
 }
