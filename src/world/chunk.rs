@@ -192,7 +192,12 @@ fn get_neighbors(coords: Vec2, mut radius: i32) -> Vec<(Vec2, usize)> {
         for y in start..end {
             // current chunk isn't a neighbor
             if x != 0 || y != 0 {
-                neighbors.push((Vec2::new(coords.x + x as f32, coords.y + y as f32), NORMAL_LOD));
+                // closest chunk have higher lod
+                if (x >= -1 && x <= 1) && (y >= -1 && y <= 1) {
+                    neighbors.push((Vec2::new(coords.x + x as f32, coords.y + y as f32), NORMAL_LOD));
+                } else {
+                    neighbors.push((Vec2::new(coords.x + x as f32, coords.y + y as f32), FAR_LOD));
+                }
             }
         }
     }
