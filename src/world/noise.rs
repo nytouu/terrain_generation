@@ -8,7 +8,7 @@ use noise::{core::worley::ReturnType, *};
 #[allow(non_snake_case)]
 pub fn generate_noise_map(extent: f64, width: usize, depth: usize, chunk_location: Vec2) -> NoiseMap {
     /// Planet seed. Change this to generate a different planet.
-    const CURRENT_SEED: u32 = 1;
+    const CURRENT_SEED: u32 = 9823247;
 
     /// Frequency of the planet's continents. Higher frequency produces
     /// smaller, more numerous continents. This value is measured in radians.
