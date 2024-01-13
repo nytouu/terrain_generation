@@ -13,6 +13,8 @@ const CHUNK_WORLD_SIZE: f32 = 112.0;
 const FAR_LOD: usize = 8;
 const NORMAL_LOD: usize = 16;
 
+const TERRAIN_ALPHA: f32 = 0.8;
+
 #[derive(Event)]
 pub struct ChunkEvent(ChunkDescriptor);
 
@@ -133,7 +135,7 @@ pub fn handle_chunk_tasks(
             commands.entity(entity).insert((
                 PbrBundle {
                     mesh: meshes.add(new_chunk.mesh.clone()),
-                    material: materials.add(Color::rgb(rng.gen(),rng.gen(), rng.gen()).into()),
+                    material: materials.add(Color::rgba(rng.gen(),rng.gen(), rng.gen(), TERRAIN_ALPHA).into()),
                     transform: Transform {
                         translation: Vec3::new(x as f32 * CHUNK_WORLD_SIZE, 0.0, y as f32 * CHUNK_WORLD_SIZE),
                         scale: Vec3::new(CHUNK_WORLD_SCALE, CHUNK_WORLD_SCALE, CHUNK_WORLD_SCALE),
@@ -184,7 +186,6 @@ fn get_neighbors(coords: Vec2, mut radius: i32) -> Vec<(Vec2, usize)> {
     let mut neighbors = Vec::<(Vec2, usize)>::new();
     if radius <= 0 { radius = 1 };
 
-    // let diameter = radius * 2 + 1;
     let start = -radius;
     let end = radius + 1;
 
