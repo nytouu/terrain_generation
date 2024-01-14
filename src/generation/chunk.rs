@@ -1,11 +1,10 @@
 use bevy::{prelude::*, pbr::wireframe::Wireframe};
 use bevy_flycam::FlyCam;
 use bevy_rapier3d::{dynamics::RigidBody, geometry::{Collider, ComputedColliderShape}};
-use rand::Rng;
 use bevy::tasks::{block_on, AsyncComputeTaskPool, Task};
 use futures_lite::future;
 
-use super::generation::create_mesh;
+use super::mesh::create_mesh;
 
 const CHUNK_WORLD_SCALE: f32 = 512.0;
 const CHUNK_WORLD_SIZE: f32 = 112.0;
@@ -13,7 +12,7 @@ const CHUNK_WORLD_SIZE: f32 = 112.0;
 const FAR_LOD: usize = 8;
 const NORMAL_LOD: usize = 16;
 
-const TERRAIN_ALPHA: f32 = 0.8;
+const TERRAIN_ALPHA: f32 = 1.0;
 
 #[derive(Event)]
 pub struct ChunkEvent(ChunkDescriptor);
@@ -124,8 +123,6 @@ pub fn handle_chunk_tasks(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
 ){
-    let mut rng = rand::thread_rng();
-
     for (entity, mut task) in &mut chunk_tasks {
         if let Some(new_chunk) = block_on(future::poll_once(&mut task.task)) {
             let x = new_chunk.coords.x;
@@ -135,7 +132,7 @@ pub fn handle_chunk_tasks(
             commands.entity(entity).insert((
                 PbrBundle {
                     mesh: meshes.add(new_chunk.mesh.clone()),
-                    material: materials.add(Color::rgba(rng.gen(),rng.gen(), rng.gen(), TERRAIN_ALPHA).into()),
+                    material: materials.add(Color::rgba(0.05, 0.5, 0.1, TERRAIN_ALPHA).into()),
                     transform: Transform {
                         translation: Vec3::new(x as f32 * CHUNK_WORLD_SIZE, 0.0, y as f32 * CHUNK_WORLD_SIZE),
                         scale: Vec3::new(CHUNK_WORLD_SCALE, CHUNK_WORLD_SCALE, CHUNK_WORLD_SCALE),

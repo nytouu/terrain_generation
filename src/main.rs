@@ -6,11 +6,13 @@ use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy_flycam::prelude::*;
 
 pub mod world;
+pub mod generation;
 pub mod camera;
 pub mod postprocess;
 pub mod ui;
 pub mod mouse_grab;
 
+use generation::GenerationPlugin;
 use world::WorldPlugin;
 use camera::CameraPlugin;
 use postprocess::PostProcessPlugin;
@@ -35,6 +37,7 @@ fn main() {
             WireframePlugin,
             MouseGrabPlugin,
             CameraPlugin,
+            GenerationPlugin,
             WorldPlugin,
             NoCameraPlayerPlugin,
             PostProcessPlugin,

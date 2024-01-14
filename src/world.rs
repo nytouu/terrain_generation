@@ -1,27 +1,11 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-pub mod noise;
-pub mod generation;
-pub mod chunk;
-
-use self::chunk::*;
-
 pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App){
-        app.add_systems(Startup, (
-                setup_world,
-                setup_chunks
-            ));
-        app.add_event::<ChunkEvent>();
-        app.add_systems(FixedUpdate, (
-            handle_chunks_event,
-            spawn_chunk_task,
-            handle_chunk_tasks,
-            remove_chunks
-        ).chain());
+        app.add_systems(Startup, setup_world);
     }
 }
 
