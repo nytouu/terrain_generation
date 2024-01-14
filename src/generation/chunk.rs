@@ -14,6 +14,8 @@ const NORMAL_LOD: usize = 16;
 
 const TERRAIN_ALPHA: f32 = 1.0;
 
+const RENDER_DISTANCE: i32 = 5;
+
 #[derive(Event)]
 pub struct ChunkEvent(ChunkDescriptor);
 
@@ -62,7 +64,7 @@ pub fn handle_chunks_event(
 ){
     if let Ok(player_transform) = player_query.get_single() {
         let current_chunk = get_player_chunk(player_transform.translation);
-        let neighbors = get_neighbors(current_chunk, 5);
+        let neighbors = get_neighbors(current_chunk, RENDER_DISTANCE);
 
         for (neighbor, lod) in &neighbors {
             let mut already_tasked = false;
@@ -159,7 +161,7 @@ pub fn remove_chunks(
 ){
     if let Ok(player_transform) = player_query.get_single() {
         let current_chunk = get_player_chunk(player_transform.translation);
-        let neighbors = get_neighbors(current_chunk, 5);
+        let neighbors = get_neighbors(current_chunk, RENDER_DISTANCE);
 
         for (entity, chunk) in chunks.iter() {
             let mut should_remove = true;
