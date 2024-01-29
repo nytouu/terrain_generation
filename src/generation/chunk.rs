@@ -19,9 +19,6 @@ const RENDER_DISTANCE: i32 = 6;
 const HEIGHT_INTENSITY: f32 = 0.2;
 const MAP_SIZE: f64 = 0.25;
 
-#[derive(Event)]
-pub struct ChunkEvent(ChunkDescriptor);
-
 pub struct ChunkDescriptor {
     pub lod: usize,
     pub coords: Vec2
@@ -57,21 +54,32 @@ impl Chunk {
 }
 
 pub fn setup_chunks(
-    mut ev_chunk: EventWriter<ChunkEvent>,
+    mut commands: Commands,
 ){
-    ev_chunk.send(ChunkEvent(ChunkDescriptor{
-        lod: NORMAL_LOD,
-        coords: Vec2::new(0.0, 0.0)
-    }));
+    let thread_pool = AsyncComputeTaskPool::get();
+
+    let task = thread_pool.spawn(async move {
+        Chunk::new(Vec2::new(0.0, 0.0), NORMAL_LOD)
+    });
+
+    commands.spawn(ChunkTask{
+        task,
+        descriptor: ChunkDescriptor {
+            lod: NORMAL_LOD,
+            coords: Vec2::new(0.0, 0.0) 
+        }
+    });
 }
 
-pub fn handle_chunks_event(
+pub fn handle_new_chunks(
+    mut commands: Commands,
     chunks: Query<&Chunk>,
     tasks: Query<&ChunkTask>,
     player_query: Query<&Transform, With<FlyCam>>,
-    mut ev_chunk: EventWriter<ChunkEvent>,
 ){
     if let Ok(player_transform) = player_query.get_single() {
+        let thread_pool = AsyncComputeTaskPool::get();
+
         let current_chunk = get_player_chunk(player_transform.translation);
         let neighbors = get_neighbors(current_chunk, RENDER_DISTANCE);
 
@@ -93,38 +101,23 @@ pub fn handle_chunks_event(
             }
 
             if !already_generated && !already_tasked {
-                ev_chunk.send(ChunkEvent(ChunkDescriptor{
-                    lod: *lod,
-                    coords: Vec2::new(neighbor.x, neighbor.y)
-                }));
+                let x = neighbor.x;
+                let y = neighbor.y;
+                let lod = *lod;
+
+                let task = thread_pool.spawn(async move {
+                    Chunk::new(Vec2::new(x, y), lod)
+                });
+
+                commands.spawn(ChunkTask{
+                    task,
+                    descriptor: ChunkDescriptor {
+                        lod,
+                        coords: Vec2::new(x, y)
+                    }
+                });
             }
         }
-    }
-}
-
-pub fn spawn_chunk_task(
-    mut commands: Commands,
-    mut ev_chunk: EventReader<ChunkEvent>,
-){
-    let thread_pool = AsyncComputeTaskPool::get();
-
-    for ev in ev_chunk.read() {
-        let builder = &ev.0;
-        let x = builder.coords.x;
-        let y = builder.coords.y;
-        let lod = builder.lod;
-
-        let task = thread_pool.spawn(async move {
-            Chunk::new(Vec2::new(x, y), lod)
-        });
-
-        commands.spawn(ChunkTask{
-            task,
-            descriptor: ChunkDescriptor {
-                lod: builder.lod,
-                coords: Vec2::new(x, y) 
-            }
-        });
     }
 }
 
