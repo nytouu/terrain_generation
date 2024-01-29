@@ -9,12 +9,15 @@ use super::mesh::create_mesh;
 const CHUNK_WORLD_SCALE: f32 = 512.0;
 const CHUNK_WORLD_SIZE: f32 = 112.0;
 
-const FAR_LOD: usize = 8;
-const NORMAL_LOD: usize = 16;
+const FAR_LOD: usize = 16;
+const NORMAL_LOD: usize = 32;
 
 const TERRAIN_ALPHA: f32 = 1.0;
 
-const RENDER_DISTANCE: i32 = 5;
+const RENDER_DISTANCE: i32 = 6;
+
+const HEIGHT_INTENSITY: f32 = 0.2;
+const MAP_SIZE: f64 = 0.25;
 
 #[derive(Event)]
 pub struct ChunkEvent(ChunkDescriptor);
@@ -40,7 +43,7 @@ pub struct ChunkTask {
 impl Chunk {
     fn new(coords: Vec2, lod: usize) -> Chunk {
         Chunk {
-            mesh: create_mesh(0.25, 0.2, lod, lod, coords),
+            mesh: create_mesh(MAP_SIZE, HEIGHT_INTENSITY, lod, lod, coords),
             lod,
             coords
         }
@@ -134,7 +137,7 @@ pub fn handle_chunk_tasks(
             commands.entity(entity).insert((
                 PbrBundle {
                     mesh: meshes.add(new_chunk.mesh.clone()),
-                    material: materials.add(Color::rgba(0.05, 0.5, 0.1, TERRAIN_ALPHA).into()),
+                    material: materials.add(Color::rgba(1.0, 1.0, 1.0, TERRAIN_ALPHA).into()),
                     transform: Transform {
                         translation: Vec3::new(x as f32 * CHUNK_WORLD_SIZE, 0.0, y as f32 * CHUNK_WORLD_SIZE),
                         scale: Vec3::new(CHUNK_WORLD_SCALE, CHUNK_WORLD_SCALE, CHUNK_WORLD_SCALE),
@@ -168,6 +171,7 @@ pub fn remove_chunks(
 
             for (neighbor, lod) in &neighbors {
                 if neighbor == &chunk.coords && lod == &chunk.lod {
+                    // replace if !chunklod
                     should_remove = false;
                 }
                 if current_chunk == chunk.coords {

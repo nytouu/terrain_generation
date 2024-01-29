@@ -1,6 +1,7 @@
 use bevy::{prelude::*, pbr::CascadeShadowConfigBuilder};
 use bevy_atmosphere::prelude::*;
 use bevy_flycam::FlyCam;
+
 pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
@@ -57,9 +58,6 @@ fn setup_camera(mut commands: Commands){
             color: Color::rgba(0.35, 0.48, 0.66, 1.0),
             directional_light_color: Color::rgba(1.0, 0.95, 0.85, 1.0),
             directional_light_exponent: 300.0,
-            // falloff: FogFalloff::Linear {
-            //     start: 128.0,
-            //     end: 1024.0,
             falloff: FogFalloff::from_visibility_colors(
                 512.0, // distance in world units up to which objects retain visibility (>= 5% contrast)
                 Color::rgb(0.35, 0.5, 0.66), // atmospheric extinction color (after light is lost due to absorption by atmospheric particles)
@@ -70,7 +68,7 @@ fn setup_camera(mut commands: Commands){
     ));
 
     let cascade_shadow_config = CascadeShadowConfigBuilder {
-        first_cascade_far_bound: 0.8,
+        first_cascade_far_bound: 20.0,
         maximum_distance: 1000.0,
         ..default()
     }
@@ -78,7 +76,7 @@ fn setup_camera(mut commands: Commands){
 
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
-            illuminance: 100000.0,
+            illuminance: 50000.0,
             shadows_enabled: true,
             ..default()
         },
