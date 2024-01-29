@@ -14,7 +14,9 @@ impl Plugin for GenerationPlugin {
         app.add_event::<ChunkEvent>();
         app.add_systems(FixedUpdate, (
             handle_chunks_event,
+            spawn_replace_task,
             spawn_chunk_task,
+            handle_replace_tasks,
             handle_chunk_tasks,
             remove_chunks
         ).chain());

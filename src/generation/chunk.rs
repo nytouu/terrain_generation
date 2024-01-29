@@ -40,6 +40,12 @@ pub struct ChunkTask {
     pub descriptor: ChunkDescriptor
 }
 
+#[derive(Component)]
+pub struct ReplaceTask {
+    pub task: Task<Chunk>,
+    pub descriptor: ChunkDescriptor
+}
+
 impl Chunk {
     fn new(coords: Vec2, lod: usize) -> Chunk {
         Chunk {
@@ -169,18 +175,86 @@ pub fn remove_chunks(
         for (entity, chunk) in chunks.iter() {
             let mut should_remove = true;
 
-            for (neighbor, lod) in &neighbors {
-                if neighbor == &chunk.coords && lod == &chunk.lod {
-                    // replace if !chunklod
-                    should_remove = false;
-                }
-                if current_chunk == chunk.coords {
+            for (neighbor, _) in &neighbors {
+                if current_chunk == chunk.coords || neighbor == &chunk.coords {
                     should_remove = false;
                 }
             }
             if should_remove {
                 commands.entity(entity).despawn();
             }
+        }
+    }
+}
+
+pub fn spawn_replace_task(
+    mut commands: Commands,
+    chunks: Query<(Entity, &Chunk, Option<&ReplaceTask>)>,
+    player_query: Query<&Transform, With<FlyCam>>,
+){
+    if let Ok(player_transform) = player_query.get_single() {
+        let thread_pool = AsyncComputeTaskPool::get();
+
+        let current_chunk = get_player_chunk(player_transform.translation);
+        let neighbors = get_neighbors(current_chunk, RENDER_DISTANCE);
+
+        for (entity, chunk, task) in chunks.iter() {
+            if task.is_none() {
+                for (neighbor, lod) in &neighbors {
+                    if neighbor == &chunk.coords && lod != &chunk.lod {
+                        let x = neighbor.x;
+                        let y = neighbor.y;
+                        let lod = *lod;
+
+                        let task = thread_pool.spawn(async move {
+                            Chunk::new(Vec2::new(x, y), lod)
+                        });
+
+                        commands.entity(entity).insert(
+                            ReplaceTask{
+                                task,
+                                descriptor: ChunkDescriptor{
+                                    lod,
+                                    coords: Vec2::new(x, y)
+                                }
+                            }
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub fn handle_replace_tasks(
+    mut commands: Commands,
+    mut replace_tasks: Query<(Entity, &mut ReplaceTask)>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+){
+    for (entity, mut task) in &mut replace_tasks {
+        if let Some(replacing_chunk) = block_on(future::poll_once(&mut task.task)) {
+            let x = replacing_chunk.coords.x;
+            let y = replacing_chunk.coords.y;
+
+            commands.entity(entity).despawn();
+
+            commands.spawn((
+                PbrBundle {
+                    mesh: meshes.add(replacing_chunk.mesh.clone()),
+                    material: materials.add(Color::rgba(1.0, 1.0, 1.0, TERRAIN_ALPHA).into()),
+                    transform: Transform {
+                        translation: Vec3::new(x as f32 * CHUNK_WORLD_SIZE, 0.0, y as f32 * CHUNK_WORLD_SIZE),
+                        scale: Vec3::new(CHUNK_WORLD_SCALE, CHUNK_WORLD_SCALE, CHUNK_WORLD_SCALE),
+                        ..default()
+                    },
+                    ..default()
+                },
+                RigidBody::Fixed,
+                Collider::from_bevy_mesh(&replacing_chunk.mesh, &ComputedColliderShape::TriMesh).unwrap(),
+                Wireframe,
+                replacing_chunk,
+            ));
         }
     }
 }
