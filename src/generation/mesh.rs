@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::render::render_asset::RenderAssetUsages;
 use bevy::render::render_resource::PrimitiveTopology;
 
 use super::noise::generate_noise_map;
@@ -72,8 +73,12 @@ pub fn create_mesh(
         }
     }
 
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-    mesh.set_indices(Some(bevy::render::mesh::Indices::U32(triangles)));
+    let mut mesh = Mesh::new(
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::default(),
+    );
+
+    mesh.insert_indices(bevy::render::mesh::Indices::U32(triangles));
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions.clone());
     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
     mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
@@ -85,9 +90,21 @@ pub fn create_mesh(
             let b: f32;
 
             match *y {
-                y if y > SNOW_HEIGHT => { r = 0.8; g = 1.0; b = 0.9; }, // white: snow
-                y if y < OCEAN_HEIGHT => { r = 0.1; g = 0.3; b = 0.9; }, // blue: ocean
-                _ => { r = 0.2; g = 0.9; b = 0.1; }             // green: land
+                y if y > SNOW_HEIGHT => {
+                    r = 0.8;
+                    g = 1.0;
+                    b = 0.9;
+                } // white: snow
+                y if y < OCEAN_HEIGHT => {
+                    r = 0.1;
+                    g = 0.3;
+                    b = 0.9;
+                } // blue: ocean
+                _ => {
+                    r = 0.2;
+                    g = 0.9;
+                    b = 0.1;
+                } // green: land
             }
 
             [r, g, b, 1.0]

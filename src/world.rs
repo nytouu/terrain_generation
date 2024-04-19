@@ -4,7 +4,7 @@ use bevy_rapier3d::prelude::*;
 pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
-    fn build(&self, app: &mut App){
+    fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup_world);
     }
 }
@@ -12,13 +12,18 @@ impl Plugin for WorldPlugin {
 fn setup_world(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>
-){
-    commands.spawn((PbrBundle {
-            mesh: meshes.add(shape::UVSphere::default().into()),
-            material: materials.add(Color::BLUE.into()),
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    commands.spawn((
+        PbrBundle {
+            mesh: meshes.add(Sphere::default()),
+            material: materials.add(Color::BLUE),
             transform: Transform {
-                translation: Vec3 { x: 0.0, y: 10.0, z: 0.0 },
+                translation: Vec3 {
+                    x: 0.0,
+                    y: 10.0,
+                    z: 0.0,
+                },
                 ..default()
             },
             ..default()

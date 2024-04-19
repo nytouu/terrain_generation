@@ -4,7 +4,7 @@ use bevy_rapier3d::prelude::*;
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
-    fn build(&self, app: &mut App){
+    fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup_player)
             .add_systems(Update, keyboard_movement);
     }
@@ -28,11 +28,11 @@ impl Default for Player {
 fn setup_player(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>
-){
-    let player =
-        (PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Capsule{
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let player = (
+        PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Capsule {
                 radius: 0.5,
                 depth: 1.0,
                 ..default()
@@ -40,12 +40,11 @@ fn setup_player(
             material: materials.add(Color::RED.into()),
             transform: Transform::from_xyz(10.0, 10.0, 0.0),
             ..default()
-        }, 
+        },
         Player {
             speed: 20.0,
             ..default()
         },
-
         // physics
         RigidBody::KinematicVelocityBased,
         LockedAxes::ROTATION_LOCKED,
@@ -65,12 +64,19 @@ fn setup_player(
 }
 
 fn keyboard_movement(
-    keys: Res<Input<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
-    mut player_query: Query<(&mut Transform, &mut KinematicCharacterController, &mut Velocity, &Player)>,
+    mut player_query: Query<(
+        &mut Transform,
+        &mut KinematicCharacterController,
+        &mut Velocity,
+        &Player,
+    )>,
     camera_query: Query<&Transform, (With<Camera3d>, Without<Player>)>,
-){
-    for (mut player_transform, mut player_controller, mut player_velocity, player) in player_query.iter_mut(){
+) {
+    for (mut player_transform, mut player_controller, mut player_velocity, player) in
+        player_query.iter_mut()
+    {
         let camera: &Transform = match camera_query.get_single() {
             Ok(c) => c,
             Err(e) => Err(format!("Error retrieving camera : {}", e)).unwrap(),
@@ -102,8 +108,8 @@ fn keyboard_movement(
         // lerp rotate player towards direction
         direction = direction.normalize_or_zero();
         if any {
-            player_transform.rotation =
-                Quat::from_rotation_y(direction.x.atan2(direction.z)).lerp(old_direction, player.lerp_factor);
+            player_transform.rotation = Quat::from_rotation_y(direction.x.atan2(direction.z))
+                .lerp(old_direction, player.lerp_factor);
         }
     }
 }

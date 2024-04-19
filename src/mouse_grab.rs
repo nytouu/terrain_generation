@@ -10,8 +10,8 @@ impl Plugin for MouseGrabPlugin {
 
 fn grab_mouse(
     mut windows: Query<&mut Window>,
-    key: Res<Input<KeyCode>>,
-    mouse: Res<Input<MouseButton>>,
+    key: Res<ButtonInput<KeyCode>>,
+    mouse: Res<ButtonInput<MouseButton>>,
 ) {
     let mut window = windows.single_mut();
 

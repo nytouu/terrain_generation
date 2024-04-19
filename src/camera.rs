@@ -1,11 +1,11 @@
-use bevy::{prelude::*, pbr::CascadeShadowConfigBuilder};
+use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*};
 use bevy_atmosphere::prelude::*;
 use bevy_flycam::FlyCam;
 
 pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
-    fn build(&self, app: &mut App){
+    fn build(&self, app: &mut App) {
         app.insert_resource(Msaa::Sample4)
             .insert_resource(AtmosphereModel::default());
         app.add_systems(Startup, setup_camera);
@@ -30,21 +30,22 @@ impl Default for CameraController {
             sensitivity: 0.5,
             scroll_sensitivity: 20.0,
             rotate_lock: 1.80,
-            rotation: Vec3::new(0.0, 0.0, 0.0), 
+            rotation: Vec3::new(0.0, 0.0, 0.0),
             focus: Vec3::ZERO,
-            distance: 100.0, 
-            min_distance: 10.0
+            distance: 100.0,
+            min_distance: 10.0,
         }
     }
 }
 
-fn setup_camera(mut commands: Commands){
+fn setup_camera(mut commands: Commands) {
     commands.spawn((
         Camera3dBundle {
             projection: PerspectiveProjection {
                 fov: 50.0_f32.to_radians(),
                 ..default()
-            }.into(),
+            }
+            .into(),
             transform: Transform::from_xyz(0.0, 10.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         },
@@ -64,7 +65,7 @@ fn setup_camera(mut commands: Commands){
                 Color::rgb(0.8, 0.844, 1.0), // atmospheric inscattering color (light gained due to scattering from the sun)
             ),
         },
-        FlyCam
+        FlyCam,
     ));
 
     let cascade_shadow_config = CascadeShadowConfigBuilder {
